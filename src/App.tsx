@@ -39,6 +39,7 @@ function App() {
   const [countryFilter, setCountryFilter] = useState('')
   const [processFilter, setProcessFilter] = useState('')
   const [ratingFilter, setRatingFilter] = useState('')
+  const [sortOrder, setSortOrder] = useState('recent')
   const [toast, setToast] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -75,7 +76,7 @@ function App() {
   const processes = useMemo(() => [...new Set(packs.map((pack) => pack.process).filter(Boolean))].sort(), [packs])
   const filteredPacks = useMemo(() => {
     const normalized = query.trim().toLowerCase()
-    return packs.filter((pack) => {
+    const result = packs.filter((pack) => {
       const searchable = [pack.name, pack.country, pack.region, pack.variety, pack.process, pack.shop, pack.notes]
         .join(' ').toLowerCase()
       return (!normalized || searchable.includes(normalized))
@@ -83,7 +84,13 @@ function App() {
         && (!processFilter || pack.process === processFilter)
         && (!ratingFilter || String(pack.rating) === ratingFilter)
     })
-  }, [packs, query, countryFilter, processFilter, ratingFilter])
+    return result.sort((a, b) => {
+      if (sortOrder === 'oldest') return a.createdAt.localeCompare(b.createdAt)
+      if (sortOrder === 'name') return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+      if (sortOrder === 'rating') return (b.rating ?? 0) - (a.rating ?? 0) || b.createdAt.localeCompare(a.createdAt)
+      return b.createdAt.localeCompare(a.createdAt)
+    })
+  }, [packs, query, countryFilter, processFilter, ratingFilter, sortOrder])
 
   const openAdd = () => { setSelected(null); setModal('add') }
   const openPack = (pack: CoffeePack) => { setSelected(pack); setModal('view') }
@@ -154,6 +161,7 @@ function App() {
             packs={filteredPacks} total={packs.length} loading={loading} query={query}
             onQuery={setQuery} countries={countries} processes={processes}
             countryFilter={countryFilter} processFilter={processFilter} ratingFilter={ratingFilter}
+            sortOrder={sortOrder} onSort={setSortOrder}
             onCountry={setCountryFilter} onProcess={setProcessFilter} onRating={setRatingFilter}
             onAdd={openAdd} onOpen={openPack} onRefresh={() => void reload()}
             onExport={() => void handleExport()} exporting={busy}
@@ -230,9 +238,10 @@ function FilterDropdown({ label, value, options, onChange }: {
   )
 }
 
-function CollectionScreen({ packs, total, loading, query, onQuery, countries, processes, countryFilter, processFilter, ratingFilter, onCountry, onProcess, onRating, onAdd, onOpen, onRefresh, onExport, exporting }: {
+function CollectionScreen({ packs, total, loading, query, onQuery, countries, processes, countryFilter, processFilter, ratingFilter, sortOrder, onSort, onCountry, onProcess, onRating, onAdd, onOpen, onRefresh, onExport, exporting }: {
   packs: CoffeePack[]; total: number; loading: boolean; query: string; onQuery: (value: string) => void
   countries: string[]; processes: string[]; countryFilter: string; processFilter: string; ratingFilter: string
+  sortOrder: string; onSort: (value: string) => void
   onCountry: (value: string) => void; onProcess: (value: string) => void; onRating: (value: string) => void
   onAdd: () => void; onOpen: (pack: CoffeePack) => void; onRefresh: () => void; onExport: () => void; exporting: boolean
 }) {
@@ -257,7 +266,7 @@ function CollectionScreen({ packs, total, loading, query, onQuery, countries, pr
         </div>
       </div>
 
-      <div className="results-line"><span>{loading ? 'UPDATING COLLECTION…' : `${packs.length} ${packs.length === 1 ? 'COFFEE' : 'COFFEES'}${hasFilters ? ' FOUND' : ''}`}</span><span className="results-sort">MOST RECENT <ArrowDown size={13} /></span></div>
+      <div className="results-line"><span>{loading ? 'UPDATING COLLECTION…' : `${packs.length} ${packs.length === 1 ? 'COFFEE' : 'COFFEES'}${hasFilters ? ' FOUND' : ''}`}</span><label className="results-sort">SORT BY <select aria-label="Sort coffees" value={sortOrder} onChange={(event) => onSort(event.target.value)}><option value="recent">Most recent</option><option value="oldest">Oldest first</option><option value="name">Name A–Z</option><option value="rating">Top rated</option></select><ArrowDown size={13} /></label></div>
       {loading && !total ? <div className="loading-state"><LoaderCircle className="spin" size={22} /><span>Gathering your coffees…</span></div> : packs.length ? (
         <div className="coffee-grid">{packs.map((pack, index) => <CoffeeCard key={pack.id} pack={pack} index={index} onClick={() => onOpen(pack)} />)}</div>
       ) : (

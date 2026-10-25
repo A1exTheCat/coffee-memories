@@ -58,3 +58,5 @@ main{display:flex;flex-direction:column}
 .filter-option{width:100%;min-height:38px;display:block;padding:8px 12px;border:0;background:#fff;color:#222;font-size:12px;text-align:left;white-space:nowrap;cursor:pointer}
 .filter-option:hover,.filter-option.selected{background:#111;color:#fff}
 .filter-option:focus-visible{outline:2px solid #111;outline-offset:-2px}
+.results-sort select{appearance:none;border:0;padding:0;background:transparent;color:#333;font:inherit;font-weight:500;letter-spacing:inherit;text-transform:uppercase;cursor:pointer}
+.results-sort select:focus-visible{outline:1px solid #111;outline-offset:3px}
