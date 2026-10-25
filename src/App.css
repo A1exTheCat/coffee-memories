@@ -60,3 +60,13 @@ main{display:flex;flex-direction:column}
 .filter-option:focus-visible{outline:2px solid #111;outline-offset:-2px}
 .results-sort select{appearance:none;border:0;padding:0;background:transparent;color:#333;font:inherit;font-weight:500;letter-spacing:inherit;text-transform:uppercase;cursor:pointer}
 .results-sort select:focus-visible{outline:1px solid #111;outline-offset:3px}
+
+/* Prevent iOS Safari from zooming when a small form field receives focus. */
+@media (max-width: 640px) {
+  .search-box input,
+  .field input,
+  .field textarea,
+  .field select {
+    font-size: 16px;
+  }
+}
